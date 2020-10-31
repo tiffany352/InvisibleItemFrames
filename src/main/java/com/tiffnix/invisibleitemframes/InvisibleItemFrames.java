@@ -17,6 +17,12 @@ public final class InvisibleItemFrames extends JavaPlugin {
     public static NamespacedKey KEY_IS_INVISIBLE;
     public static ItemStack INVISIBLE_FRAME;
 
+    /**
+     * Returns whether the given ItemStack is an invisible item frame item.
+     * 
+     * @param item The stack to test.
+     * @return Whether the item stack is an invisible item frame item.
+     */
     public static boolean isInvisibleItemFrame(ItemStack item) {
         if (item == null) {
             return false;
@@ -28,6 +34,13 @@ public final class InvisibleItemFrames extends JavaPlugin {
         return meta.getPersistentDataContainer().has(KEY_IS_INVISIBLE, PersistentDataType.BYTE);
     }
 
+    /**
+     * Returns whether the given Entity is an ItemFrame which should become
+     * invisible when it has an item.
+     * 
+     * @param entity The entity to test.
+     * @return Whether it is an invisible item frame entity.
+     */
     public static boolean isInvisibleItemFrame(Entity entity) {
         if (entity == null) {
             return false;
@@ -46,6 +59,7 @@ public final class InvisibleItemFrames extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PluginListener(), this);
 
+        // Create the actual item that should be used.
         ItemStack item = new ItemStack(Material.ITEM_FRAME);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.RESET + "Invisible Item Frame");
@@ -54,6 +68,7 @@ public final class InvisibleItemFrames extends JavaPlugin {
         item.setAmount(8);
         INVISIBLE_FRAME = item;
 
+        // Register the crafting recipe.
         NamespacedKey key = new NamespacedKey(this, "invisible_item_frame");
         ShapedRecipe recipe = new ShapedRecipe(key, item);
         recipe.shape("FFF", "F F", "FFF");
