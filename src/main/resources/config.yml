@@ -10,6 +10,9 @@ item:
 
 # Customization for the crafting recipe.
 recipe:
+  # Whether the recipe should be usable.
+  enabled: true
+
   # Shape to use for crafting recipe. Spaces are empty slots, and for a smaller than 3x3 recipe you can use a smaller grid. Letters are interpreted by the ingredients list below.
   shape:
     - FFF

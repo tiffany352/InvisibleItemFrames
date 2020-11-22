@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
@@ -24,8 +25,12 @@ import java.util.Map;
 
 public final class InvisibleItemFrames extends JavaPlugin {
     public static InvisibleItemFrames INSTANCE;
-    public static NamespacedKey KEY_IS_INVISIBLE;
+    public static NamespacedKey RECIPE_KEY;
+    public static NamespacedKey IS_INVISIBLE_KEY;
     public static ItemStack INVISIBLE_FRAME;
+    public static ShapedRecipe RECIPE;
+
+    boolean recipeEnabled;
 
     /**
      * Returns whether the given ItemStack is an invisible item frame item.
@@ -41,7 +46,7 @@ public final class InvisibleItemFrames extends JavaPlugin {
         if (meta == null) {
             return false;
         }
-        return meta.getPersistentDataContainer().has(KEY_IS_INVISIBLE, PersistentDataType.BYTE);
+        return meta.getPersistentDataContainer().has(IS_INVISIBLE_KEY, PersistentDataType.BYTE);
     }
 
     /**
@@ -58,16 +63,22 @@ public final class InvisibleItemFrames extends JavaPlugin {
         if (entity.getType() != EntityType.ITEM_FRAME) {
             return false;
         }
-        return entity.getPersistentDataContainer().has(KEY_IS_INVISIBLE, PersistentDataType.BYTE);
+        return entity.getPersistentDataContainer().has(IS_INVISIBLE_KEY, PersistentDataType.BYTE);
     }
 
     @Override
     public void onEnable() {
         INSTANCE = this;
 
-        KEY_IS_INVISIBLE = new NamespacedKey(this, "invisible");
+        IS_INVISIBLE_KEY = new NamespacedKey(this, "invisible");
+        RECIPE_KEY = new NamespacedKey(this, "invisible_item_frame");
 
         getServer().getPluginManager().registerEvents(new PluginListener(), this);
+
+        final PluginCommand command = getServer().getPluginCommand("invisframes");
+        assert command != null;
+        command.setTabCompleter(new InvisFramesCompleter());
+        command.setExecutor(new InvisFramesCommand());
 
         saveDefaultConfig();
 
@@ -79,10 +90,11 @@ public final class InvisibleItemFrames extends JavaPlugin {
         // Plugin shutdown logic
     }
 
-    private void loadConfig() {
+    public void loadConfig() {
         final FileConfiguration config = getConfig();
 
         config.addDefault("item.name", ChatColor.RESET + "Invisible Item Frame");
+        config.addDefault("recipe.enabled", true);
         config.addDefault("recipe.count", 8);
         config.addDefault("recipe.shape", Arrays.asList("FFF", "F F", "FFF"));
         config.addDefault("recipe.ingredients.F", "minecraft:item_frame");
@@ -93,14 +105,14 @@ public final class InvisibleItemFrames extends JavaPlugin {
         assert meta != null;
         meta.setDisplayName(config.getString("item.name"));
         meta.setLore(config.getStringList("item.lore"));
-        meta.getPersistentDataContainer().set(KEY_IS_INVISIBLE, PersistentDataType.BYTE, (byte) 1);
+        meta.getPersistentDataContainer().set(IS_INVISIBLE_KEY, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         item.setAmount(config.getInt("recipe.count"));
         INVISIBLE_FRAME = item;
 
+        recipeEnabled = config.getBoolean("recipe.enabled");
         // Register the crafting recipe.
-        NamespacedKey key = new NamespacedKey(this, "invisible_item_frame");
-        ShapedRecipe recipe = new ShapedRecipe(key, item);
+        ShapedRecipe recipe = new ShapedRecipe(RECIPE_KEY, item);
         List<String> shape = config.getStringList("recipe.shape");
         recipe.shape(shape.toArray(new String[0]));
 
@@ -116,6 +128,15 @@ public final class InvisibleItemFrames extends JavaPlugin {
             }
             recipe.setIngredient(entry.getKey().charAt(0), material);
         }
-        Bukkit.addRecipe(recipe);
+        RECIPE = recipe;
+        // The docs say it returns false on failure. This is not true, it throws
+        // IllegalStateException. It's also impossible to reload a recipe after it's
+        // already been registered, so the recipe can't be updated with the reload
+        // command.
+        try {
+            Bukkit.addRecipe(recipe);
+        } catch (IllegalStateException ignored) {
+            getLogger().warning("Reloading recipe failed because Spigot doesn't support reloading recipes.");
+        }
     }
 }

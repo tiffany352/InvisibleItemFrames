@@ -5,3 +5,24 @@ api-version: 1.13
 description: Adds craftable invisible item frames for survival.
 authors:
   - Tiffnix
+commands:
+  invisframes:
+    description: Commands related to Invisible Item Frames.
+    usage: /invisframes [give|grant|reload]
+    permission: invisibleitemframes.command
+permissions:
+  invisibleitemframes.craft:
+    default: true
+    description: Whether players are allowed to craft invisible item frames.
+  invisibleitemframes.place:
+    default: true
+    description: Whether players can place the invisible item frame items.
+  invisibleitemframes.break:
+    default: true
+    description: Whether players can break invisible item frames.
+  invisibleitemframes.interact:
+    default: true
+    description: Whether players can interact (add/remove items, rotate) the invisible item frames.
+  invisibleitemframes.command:
+    default: op
+    description: Allows granting the recipe, giving the item, and reloading the config.
