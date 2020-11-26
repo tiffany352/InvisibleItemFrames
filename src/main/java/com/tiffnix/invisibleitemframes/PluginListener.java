@@ -7,6 +7,7 @@ package com.tiffnix.invisibleitemframes;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -206,9 +207,9 @@ public class PluginListener implements Listener {
             return;
         }
 
-        final boolean limitedCrafting = entity.getWorld().isGameRule("doLimitedCrafting");
+        final Boolean limitedCrafting = entity.getWorld().getGameRuleValue(GameRule.DO_LIMITED_CRAFTING);
         final boolean entityHasRecipe = entity.hasDiscoveredRecipe(InvisibleItemFrames.RECIPE_KEY);
-        if (limitedCrafting && !entityHasRecipe) {
+        if (limitedCrafting == Boolean.TRUE && !entityHasRecipe) {
              event.getInventory().setResult(new ItemStack(Material.AIR));
         }
     }
