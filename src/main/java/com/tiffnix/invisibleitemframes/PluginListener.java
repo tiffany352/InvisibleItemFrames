@@ -39,7 +39,8 @@ public class PluginListener implements Listener {
      */
     @EventHandler
     public void onHangingPlace(HangingPlaceEvent event) {
-        if (event.getEntity().getType() != EntityType.ITEM_FRAME) {
+        final EntityType entityType = event.getEntity().getType();
+        if (entityType != EntityType.ITEM_FRAME && entityType != EntityType.GLOW_ITEM_FRAME) {
             return;
         }
         final Location location = event.getBlock().getLocation();
@@ -99,12 +100,17 @@ public class PluginListener implements Listener {
         final Item entity = event.getEntity();
         final ItemStack stack = entity.getItemStack();
         final long now = entity.getWorld().getFullTime();
-        if (stack.getType() != Material.ITEM_FRAME || now != hangingBrokenAtTick) {
+        if (now != hangingBrokenAtTick) {
+            return;
+        }
+        if (stack.getType() == Material.ITEM_FRAME) {
+            stack.setItemMeta(InvisibleItemFrames.INVISIBLE_FRAME.getItemMeta());
+        } else if (stack.getType() == Material.GLOW_ITEM_FRAME) {
+            stack.setItemMeta(InvisibleItemFrames.INVISIBLE_GLOW_FRAME.getItemMeta());
+        } else {
             return;
         }
         hangingBrokenAtTick = -1;
-
-        stack.setItemMeta(InvisibleItemFrames.INVISIBLE_FRAME.getItemMeta());
         entity.setItemStack(stack);
     }
 
@@ -195,11 +201,6 @@ public class PluginListener implements Listener {
             return;
         }
 
-        if (!InvisibleItemFrames.INSTANCE.recipeEnabled) {
-            event.getInventory().setResult(new ItemStack(Material.AIR));
-            return;
-        }
-
         final HumanEntity entity = event.getView().getPlayer();
 
         if (!entity.hasPermission("invisibleitemframes.craft")) {
@@ -209,7 +210,7 @@ public class PluginListener implements Listener {
 
         final Boolean limitedCrafting = entity.getWorld().getGameRuleValue(GameRule.DO_LIMITED_CRAFTING);
         final boolean entityHasRecipe = entity.hasDiscoveredRecipe(InvisibleItemFrames.RECIPE_KEY);
-        if (limitedCrafting == Boolean.TRUE && !entityHasRecipe) {
+        if (Boolean.TRUE.equals(limitedCrafting) && !entityHasRecipe) {
              event.getInventory().setResult(new ItemStack(Material.AIR));
         }
     }

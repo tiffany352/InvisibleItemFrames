@@ -25,12 +25,12 @@ import java.util.Map;
 
 public final class InvisibleItemFrames extends JavaPlugin {
     public static InvisibleItemFrames INSTANCE;
-    public static NamespacedKey RECIPE_KEY;
     public static NamespacedKey IS_INVISIBLE_KEY;
+    public static NamespacedKey RECIPE_KEY;
+    public static NamespacedKey GLOW_RECIPE_KEY;
     public static ItemStack INVISIBLE_FRAME;
-    public static ShapedRecipe RECIPE;
-
-    boolean recipeEnabled;
+    public static ItemStack INVISIBLE_GLOW_FRAME;
+    private static boolean firstLoad = true;
 
     /**
      * Returns whether the given ItemStack is an invisible item frame item.
@@ -60,7 +60,8 @@ public final class InvisibleItemFrames extends JavaPlugin {
         if (entity == null) {
             return false;
         }
-        if (entity.getType() != EntityType.ITEM_FRAME) {
+        final EntityType type = entity.getType();
+        if (type != EntityType.ITEM_FRAME && type != EntityType.GLOW_ITEM_FRAME) {
             return false;
         }
         return entity.getPersistentDataContainer().has(IS_INVISIBLE_KEY, PersistentDataType.BYTE);
@@ -72,6 +73,7 @@ public final class InvisibleItemFrames extends JavaPlugin {
 
         IS_INVISIBLE_KEY = new NamespacedKey(this, "invisible");
         RECIPE_KEY = new NamespacedKey(this, "invisible_item_frame");
+        GLOW_RECIPE_KEY = new NamespacedKey(this, "invisible_glow_item_frame");
 
         getServer().getPluginManager().registerEvents(new PluginListener(), this);
 
@@ -83,6 +85,8 @@ public final class InvisibleItemFrames extends JavaPlugin {
         saveDefaultConfig();
 
         loadConfig();
+
+        firstLoad = false;
     }
 
     @Override
@@ -90,33 +94,37 @@ public final class InvisibleItemFrames extends JavaPlugin {
         // Plugin shutdown logic
     }
 
-    public void loadConfig() {
-        final FileConfiguration config = getConfig();
+    private ItemStack createItem(Material material, ConfigurationSection config) {
+        if (!config.getBoolean("enabled")) {
+            getLogger().info("Item " + config.getName() + " is disabled in the config");
+            return null;
+        }
 
-        config.addDefault("item.name", ChatColor.RESET + "Invisible Item Frame");
-        config.addDefault("recipe.enabled", true);
-        config.addDefault("recipe.count", 8);
-        config.addDefault("recipe.shape", Arrays.asList("FFF", "F F", "FFF"));
-        config.addDefault("recipe.ingredients.F", "minecraft:item_frame");
+        ItemStack item = new ItemStack(material, 1);
 
-        // Create the actual item that should be used.
-        ItemStack item = new ItemStack(Material.ITEM_FRAME);
         ItemMeta meta = item.getItemMeta();
         assert meta != null;
-        meta.setDisplayName(config.getString("item.name"));
-        meta.setLore(config.getStringList("item.lore"));
+        meta.setDisplayName(config.getString("name"));
+        meta.setLore(config.getStringList("lore"));
         meta.getPersistentDataContainer().set(IS_INVISIBLE_KEY, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
-        item.setAmount(config.getInt("recipe.count"));
-        INVISIBLE_FRAME = item;
 
-        recipeEnabled = config.getBoolean("recipe.enabled");
-        // Register the crafting recipe.
-        ShapedRecipe recipe = new ShapedRecipe(RECIPE_KEY, item);
-        List<String> shape = config.getStringList("recipe.shape");
+        return item;
+    }
+
+    private void addRecipeFromConfig(NamespacedKey key, ConfigurationSection config, ItemStack item) {
+        if (!config.getBoolean("enabled")) {
+            getLogger().info("Recipe " + config.getName() + " is disabled in the config");
+            return;
+        }
+
+        item = item.clone();
+        item.setAmount(config.getInt("count"));
+        ShapedRecipe recipe = new ShapedRecipe(key, item);
+        List<String> shape = config.getStringList("shape");
         recipe.shape(shape.toArray(new String[0]));
 
-        ConfigurationSection ingredients = config.getConfigurationSection("recipe.ingredients");
+        ConfigurationSection ingredients = config.getConfigurationSection("ingredients");
         // If this is null, then the defaults above are incorrect.
         assert ingredients != null;
         for (Map.Entry<String, Object> entry : ingredients.getValues(false).entrySet()) {
@@ -128,15 +136,71 @@ public final class InvisibleItemFrames extends JavaPlugin {
             }
             recipe.setIngredient(entry.getKey().charAt(0), material);
         }
-        RECIPE = recipe;
-        // The docs say it returns false on failure. This is not true, it throws
-        // IllegalStateException. It's also impossible to reload a recipe after it's
-        // already been registered, so the recipe can't be updated with the reload
-        // command.
+
         try {
             Bukkit.addRecipe(recipe);
         } catch (IllegalStateException ignored) {
-            getLogger().warning("Reloading recipe failed because Spigot doesn't support reloading recipes.");
+            if (firstLoad) {
+                getLogger().severe("Failed to add recipe " + config.getName() + ". This is likely an issue in the config");
+            } else {
+                getLogger().warning("Failed to add recipe " + config.getName() + ", because Spigot doesn't support reloading recipes.");
+            }
         }
+    }
+
+    public void loadConfig() {
+        final FileConfiguration config = getConfig();
+
+        boolean migrateLegacy = false;
+        ConfigurationSection legacyItemSection = config.getConfigurationSection("item");
+        if (legacyItemSection != null) {
+            config.createSection("items.invisible_item_frame", legacyItemSection.getValues(true));
+            config.set("items.invisible_item_frame.enabled", true);
+            config.set("item", null);
+            migrateLegacy = true;
+        }
+        ConfigurationSection legacyRecipeSection = config.getConfigurationSection("recipe");
+        if (legacyRecipeSection != null) {
+            config.createSection("recipes.invisible_item_frame", legacyRecipeSection.getValues(true));
+            config.set("recipe", null);
+            migrateLegacy = true;
+        }
+
+        if (migrateLegacy) {
+            getLogger().info("Converting config to new format");
+            saveConfig();
+        }
+
+        config.addDefault("items.invisible_item_frame.enabled", true);
+        config.addDefault("items.invisible_item_frame.name", ChatColor.RESET + "Invisible Item Frame");
+
+        config.addDefault("items.invisible_glow_item_frame.enabled", true);
+        config.addDefault("items.invisible_glow_item_frame.name", ChatColor.RESET + "Invisible Glow Item Frame");
+
+        config.addDefault("recipes.invisible_item_frame.enabled", true);
+        config.addDefault("recipes.invisible_item_frame.count", 8);
+        config.addDefault("recipes.invisible_item_frame.shape", Arrays.asList("FFF", "F F", "FFF"));
+        config.addDefault("recipes.invisible_item_frame.ingredients.F", "minecraft:item_frame");
+
+        config.addDefault("recipes.invisible_glow_item_frame.enabled", true);
+        config.addDefault("recipes.invisible_glow_item_frame.count", 8);
+        config.addDefault("recipes.invisible_glow_item_frame.shape", Arrays.asList("FFF", "F F", "FFF"));
+        config.addDefault("recipes.invisible_glow_item_frame.ingredients.F", "minecraft:glow_item_frame");
+
+        ConfigurationSection regularItem = config.getConfigurationSection("items.invisible_item_frame");
+        assert regularItem != null;
+        INVISIBLE_FRAME = createItem(Material.ITEM_FRAME, regularItem);
+
+        ConfigurationSection glowItem = config.getConfigurationSection("items.invisible_glow_item_frame");
+        assert glowItem != null;
+        INVISIBLE_GLOW_FRAME = createItem(Material.GLOW_ITEM_FRAME, glowItem);
+
+        ConfigurationSection regularRecipe = config.getConfigurationSection("recipes.invisible_item_frame");
+        assert regularRecipe != null;
+        addRecipeFromConfig(RECIPE_KEY, regularRecipe, INVISIBLE_FRAME);
+
+        ConfigurationSection glowRecipe = config.getConfigurationSection("recipes.invisible_glow_item_frame");
+        assert glowRecipe != null;
+        addRecipeFromConfig(GLOW_RECIPE_KEY, glowRecipe, INVISIBLE_GLOW_FRAME);
     }
 }

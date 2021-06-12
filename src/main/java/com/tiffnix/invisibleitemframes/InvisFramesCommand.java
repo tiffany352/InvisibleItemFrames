@@ -16,16 +16,12 @@ public class InvisFramesCommand implements CommandExecutor {
         if (args.length < 1) {
             return false;
         }
-        switch (args[0]) {
-            case "reload":
-                return onReload(sender);
-            case "grant":
-                return onGrant(sender, args);
-            case "give":
-                return onGive(sender, args);
-            default:
-                return false;
-        }
+        return switch (args[0]) {
+            case "reload" -> onReload(sender);
+            case "grant" -> onGrant(sender, args);
+            case "give" -> onGive(sender, args);
+            default -> false;
+        };
     }
 
     private boolean onReload(CommandSender sender) {

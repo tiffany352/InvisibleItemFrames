@@ -1,27 +1,45 @@
 # Customization of the appearance of the item.
 item:
-  # What the name of the item should be.
-  name: §rInvisible Item Frame
+  invisible_item_frame:
+    # What the name of the item should be.
+    name: §rInvisible Item Frame
 
-  # Uncomment to assign lore text for the item.
-  #lore:
-  #  - line1
-  #  - line2
+    # Uncomment to assign lore text for the item.
+    #lore:
+    #  - line1
+    #  - line2
+
+  invisible_glow_item_frame:
+    name: §rInvisible Glow Item Frame
 
 # Customization for the crafting recipe.
-recipe:
-  # Whether the recipe should be usable.
-  enabled: true
+recipes:
+  invisible_item_frame:
+    # Whether the recipe should be usable.
+    enabled: true
 
-  # Shape to use for crafting recipe. Spaces are empty slots, and for a smaller than 3x3 recipe you can use a smaller grid. Letters are interpreted by the ingredients list below.
-  shape:
-    - FFF
-    - F F
-    - FFF
+    # Shape to use for crafting recipe. Spaces are empty slots, and for a smaller than 3x3 recipe you can use a smaller grid. Letters are interpreted by the ingredients list below.
+    shape:
+      - FFF
+      - F F
+      - FFF
 
-  # Items that are required for crafting.
-  ingredients:
-    F: minecraft:item_frame
+    # Items that are required for crafting.
+    ingredients:
+      F: minecraft:item_frame
 
-  # How many of the item should be produced by the recipe.
-  count: 8
+    # How many of the item should be produced by the recipe.
+    count: 8
+
+  invisible_glow_item_frame:
+    enabled: true
+
+    shape:
+      - FFF
+      - F F
+      - FFF
+
+    ingredients:
+      F: minecraft:glow_item_frame
+
+    count: 8
