@@ -153,16 +153,18 @@ public final class InvisibleItemFrames extends JavaPlugin {
 
         boolean migrateLegacy = false;
         ConfigurationSection legacyItemSection = config.getConfigurationSection("item");
-        if (legacyItemSection != null) {
+        if (config.contains("item", true) && legacyItemSection != null) {
             config.createSection("items.invisible_item_frame", legacyItemSection.getValues(true));
             config.set("items.invisible_item_frame.enabled", true);
             config.set("item", null);
+            getLogger().info("Found legacy item section");
             migrateLegacy = true;
         }
         ConfigurationSection legacyRecipeSection = config.getConfigurationSection("recipe");
-        if (legacyRecipeSection != null) {
+        if (config.contains("recipe", true) && legacyRecipeSection != null) {
             config.createSection("recipes.invisible_item_frame", legacyRecipeSection.getValues(true));
             config.set("recipe", null);
+            getLogger().info("Found legacy recipe section");
             migrateLegacy = true;
         }
 

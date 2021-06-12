@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class InvisFramesCompleter implements TabCompleter {
-    private static final String[] COMMANDS = new String[] { "reload", "grant", "give" };
+    private static final String[] COMMANDS = new String[]{"reload", "grant", "give"};
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
@@ -18,27 +18,16 @@ public class InvisFramesCompleter implements TabCompleter {
             return Arrays.asList(COMMANDS);
         }
 
-        switch (args[0]) {
-            case "reload":
-                return new ArrayList<>();
-            case "grant":
-                return null;
-            case "give":
-                switch (args.length) {
-                    case 2:
-                        return null;
-                    case 3:
-                        return Arrays.asList("1", "8", "64");
-                    default:
-                        return new ArrayList<>();
-                }
-            default:
-                if (args.length > 1) {
-                    return null;
-                } else {
-                    return StringUtil.copyPartialMatches(args[0], Arrays.asList(COMMANDS), new ArrayList<>());
-                }
-        }
+        return switch (args[0]) {
+            case "reload" -> new ArrayList<>();
+            case "grant" -> null;
+            case "give" -> switch (args.length) {
+                case 2 -> Arrays.asList("regular", "glow");
+                case 3 -> null;
+                case 4 -> Arrays.asList("1", "8", "64");
+                default -> new ArrayList<>();
+            };
+            default -> args.length > 1 ? null : StringUtil.copyPartialMatches(args[0], Arrays.asList(COMMANDS), new ArrayList<>());
+        };
     }
-
 }

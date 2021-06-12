@@ -1,5 +1,5 @@
 # Customization of the appearance of the item.
-item:
+items:
   invisible_item_frame:
     # What the name of the item should be.
     name: §rInvisible Item Frame

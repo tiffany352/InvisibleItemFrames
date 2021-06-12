@@ -57,13 +57,14 @@ public class InvisFramesCommand implements CommandExecutor {
             return true;
         }
 
-        if (receiver.hasDiscoveredRecipe(InvisibleItemFrames.RECIPE_KEY)) {
-            sender.sendMessage("Player " + receiver.getDisplayName() + " already has this recipe.");
+        if (receiver.hasDiscoveredRecipe(InvisibleItemFrames.RECIPE_KEY) && receiver.hasDiscoveredRecipe(InvisibleItemFrames.GLOW_RECIPE_KEY)) {
+            sender.sendMessage("Player " + receiver.getDisplayName() + " already has the recipes.");
             return true;
         }
 
         receiver.discoverRecipe(InvisibleItemFrames.RECIPE_KEY);
-        sender.sendMessage("Granted recipe to " + receiver.getDisplayName());
+        receiver.discoverRecipe(InvisibleItemFrames.GLOW_RECIPE_KEY);
+        sender.sendMessage("Granted recipes to " + receiver.getDisplayName());
 
         return true;
     }
@@ -76,21 +77,34 @@ public class InvisFramesCommand implements CommandExecutor {
             receiver = (LivingEntity) sender;
         }
 
+        ItemStack itemToGive = InvisibleItemFrames.INVISIBLE_FRAME;
+
         switch (args.length) {
             default:
-                sender.sendMessage("Usage: /invisframes give [player] [count]");
+                sender.sendMessage("Usage: /invisframes give [regular|glow] [player] [count]");
                 return true;
-            case 3:
-                count = Integer.parseInt(args[2]);
+            case 4:
+                count = Integer.parseInt(args[3]);
                 // Intentional fallthrough
-            case 2:
-                receiver = Bukkit.getPlayer(args[1]);
+            case 3:
+                receiver = Bukkit.getPlayer(args[2]);
                 if (receiver == null) {
                     sender.sendMessage("Player could not be found.");
                     return true;
                 }
                 // Intentional fallthrough
+            case 2:
+                if (args[1].equals("regular")) {
+                    itemToGive = InvisibleItemFrames.INVISIBLE_FRAME;
+                } else if (args[1].equals("glow")) {
+                    itemToGive = InvisibleItemFrames.INVISIBLE_GLOW_FRAME;
+                } else {
+                    sender.sendMessage("Item type must be either regular or glow.");
+                    return true;
+                }
+                // Intentional fallthrough
             case 1:
+                // Intentional fallthrough
                 break;
         }
 
@@ -99,7 +113,7 @@ public class InvisFramesCommand implements CommandExecutor {
             return true;
         }
 
-        giveItem(receiver, InvisibleItemFrames.INVISIBLE_FRAME, count);
+        giveItem(receiver, itemToGive, count);
 
         if (receiver != sender) {
             sender.sendMessage("Gave " + count + " invisible item frames to " + receiver.getName());
@@ -112,8 +126,7 @@ public class InvisFramesCommand implements CommandExecutor {
         final ItemStack stack = template.clone();
         stack.setAmount(amount);
 
-        final Item entity = (Item) receiver.getWorld().spawnEntity(receiver.getEyeLocation(), EntityType.DROPPED_ITEM);
-        entity.setItemStack(stack);
+        final Item entity = receiver.getWorld().dropItem(receiver.getEyeLocation(), stack);
         entity.setPickupDelay(0);
         entity.setThrower(receiver.getUniqueId());
         entity.setVelocity(receiver.getEyeLocation().getDirection().multiply(1.0f / 20.0f));
