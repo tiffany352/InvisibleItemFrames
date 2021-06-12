@@ -14,15 +14,39 @@ permissions:
   invisibleitemframes.craft:
     default: true
     description: Whether players are allowed to craft invisible item frames.
+  invisibleitemframes.craft.normal:
+    default: true
+    description: Whether players are allowed to craft invisible item frames.
+  invisibleitemframes.craft.glow:
+    default: true
+    description: Whether players are allowed to craft invisible glow item frames.
   invisibleitemframes.place:
     default: true
     description: Whether players can place the invisible item frame items.
+  invisibleitemframes.place.normal:
+    default: true
+    description: Whether players can place invisible item frame items.
+  invisibleitemframes.place.glow:
+    default: true
+    description: Whether players can place invisible glow item frame items.
   invisibleitemframes.break:
     default: true
     description: Whether players can break invisible item frames.
+  invisibleitemframes.break.normal:
+    default: true
+    description: Whether players can break invisible item frames.
+  invisibleitemframes.break.glow:
+    default: true
+    description: Whether players can break invisible glow item frames.
   invisibleitemframes.interact:
     default: true
     description: Whether players can interact (add/remove items, rotate) the invisible item frames.
+  invisibleitemframes.interact.normal:
+    default: true
+    description: Whether players can interact (add/remove items, rotate) with invisible item frames.
+  invisibleitemframes.interact.glow:
+    default: true
+    description: Whether players can interact (add/remove items, rotate) with invisible glow item frames.
   invisibleitemframes.command:
     default: op
     description: Allows granting the recipe, giving the item, and reloading the config.

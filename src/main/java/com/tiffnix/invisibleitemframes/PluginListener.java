@@ -79,7 +79,8 @@ public class PluginListener implements Listener {
             }
         }
 
-        final boolean hasPermission = remover.hasPermission("invisibleitemframes.break");
+        String permissionForType = entity.getType() == EntityType.ITEM_FRAME ? "invisibleitemframes.break.normal" : "invisibleitemframes.break.glow";
+        final boolean hasPermission = remover.hasPermission("invisibleitemframes.break") && remover.hasPermission(permissionForType);
         if (isFrame && !hasPermission) {
             event.setCancelled(true);
             return;
@@ -127,7 +128,8 @@ public class PluginListener implements Listener {
         }
 
         final Player player = event.getPlayer();
-        if (!player.hasPermission("invisibleitemframes.place")) {
+        String permissionForType = item.getType() == Material.ITEM_FRAME ? "invisibleitemframes.place.normal" : "invisibleitemframes.place.glow";
+        if (!player.hasPermission("invisibleitemframes.place") || !player.hasPermission(permissionForType)) {
             final String message = "You don't have permission to place these.";
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacyText(message, ChatColor.RED));
@@ -159,7 +161,8 @@ public class PluginListener implements Listener {
 
         final ItemFrame frame = (ItemFrame) entity;
 
-        if (!event.getPlayer().hasPermission("invisibleitemframes.interact")) {
+        String permissionForType = entity.getType() == EntityType.ITEM_FRAME ? "invisibleitemframes.interact.normal" : "invisibleitemframes.interact.glow";
+        if (!event.getPlayer().hasPermission("invisibleitemframes.interact") || !event.getPlayer().hasPermission(permissionForType)) {
             event.setCancelled(true);
             return;
         }
@@ -180,7 +183,8 @@ public class PluginListener implements Listener {
 
         final ItemFrame frame = (ItemFrame) entity;
 
-        if (!event.getDamager().hasPermission("invisibleitemframes.interact")) {
+        String permissionForType = entity.getType() == EntityType.ITEM_FRAME ? "invisibleitemframes.interact.normal" : "invisibleitemframes.interact.glow";
+        if (!event.getDamager().hasPermission("invisibleitemframes.interact") || !event.getDamager().hasPermission(permissionForType)) {
             event.setCancelled(true);
             return;
         }
@@ -203,7 +207,8 @@ public class PluginListener implements Listener {
 
         final HumanEntity entity = event.getView().getPlayer();
 
-        if (!entity.hasPermission("invisibleitemframes.craft")) {
+        String permissionForType = event.getInventory().getResult().getType() == Material.ITEM_FRAME ? "invisibleitemframes.craft.normal" : "invisibleitemframes.craft.glow";
+        if (!entity.hasPermission("invisibleitemframes.craft") || !entity.hasPermission(permissionForType)) {
             event.getInventory().setResult(new ItemStack(Material.AIR));
             return;
         }
